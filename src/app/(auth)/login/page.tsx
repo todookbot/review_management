@@ -11,7 +11,9 @@ import { cn }        from "@/lib/utils"
 
 type Mode = "tenant" | "superadmin"
 
-export default function LoginPage() {
+import { Suspense } from "react"
+
+function LoginContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl  = searchParams.get("callbackUrl") ?? "/"
@@ -170,5 +172,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

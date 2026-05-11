@@ -6,7 +6,16 @@ import { eq }       from "drizzle-orm"
 import bcrypt       from "bcryptjs"
 import type { DefaultSession } from "next-auth"
 
-// ─── Extended types ───────────────────────────────────────────────────────────
+import { JWT } from "@auth/core/jwt"
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id:       string
+    role:     string
+    tenantId: string | null
+    tenantSlug: string | null
+  }
+}
 
 declare module "next-auth" {
   interface Session {
@@ -18,15 +27,6 @@ declare module "next-auth" {
     }
   }
   interface User {
-    id:       string
-    role:     string
-    tenantId: string | null
-    tenantSlug: string | null
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
     id:       string
     role:     string
     tenantId: string | null

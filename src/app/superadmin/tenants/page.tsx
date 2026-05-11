@@ -147,14 +147,12 @@ export default function TenantsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                    <DropdownMenuTrigger className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
+                      <MoreVertical className="w-4 h-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-                      <DropdownMenuItem asChild className="text-slate-300 focus:bg-slate-700">
-                        <Link href={`/superadmin/tenants/${t.id}`}>
+                      <DropdownMenuItem className="text-slate-300 focus:bg-slate-700 p-0">
+                        <Link href={`/superadmin/tenants/${t.id}`} className="flex items-center w-full px-1.5 py-1">
                           <Edit className="w-4 h-4 mr-2" /> Manage
                         </Link>
                       </DropdownMenuItem>
@@ -203,7 +201,7 @@ export default function TenantsPage() {
             ))}
             <div className="space-y-1.5">
               <Label className="text-slate-300">Plan</Label>
-              <Select value={form.plan} onValueChange={v => setForm(p => ({ ...p, plan: v }))}>
+              <Select value={form.plan} onValueChange={v => setForm(p => ({ ...p, plan: v ?? "STARTER" }))}>
                 <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
