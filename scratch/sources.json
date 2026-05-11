@@ -1,0 +1,69 @@
+[
+  {
+    "id": "e6ea2e62-7537-4305-8975-38ac3c28c989",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "GOOGLE_MY_BUSINESS",
+    "authMode": "OAUTH",
+    "displayName": "Google My Business",
+    "status": "PENDING_AUTH",
+    "createdAt": "2026-05-08T09:14:02.804Z"
+  },
+  {
+    "id": "f2d7a7c2-aa34-4454-858b-0c4dc51d6fe8",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "FACEBOOK",
+    "authMode": "OAUTH",
+    "displayName": "Facebook",
+    "status": "PENDING_AUTH",
+    "createdAt": "2026-05-08T09:14:34.871Z"
+  },
+  {
+    "id": "d0db16c3-21fd-40d1-85b8-4a46b975b449",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "FACEBOOK",
+    "authMode": "OAUTH",
+    "displayName": "Facebook",
+    "status": "PENDING_AUTH",
+    "createdAt": "2026-05-08T10:58:01.669Z"
+  },
+  {
+    "id": "8e277f81-0dc8-48f1-935f-230979ca2a9b",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "FACEBOOK",
+    "authMode": "OAUTH",
+    "displayName": "Facebook",
+    "status": "PENDING_AUTH",
+    "createdAt": "2026-05-08T12:07:09.386Z"
+  },
+  {
+    "id": "cf527029-2c23-48f1-9e8a-b3de27a920bb",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "GOOGLE_MY_BUSINESS",
+    "authMode": "OAUTH",
+    "displayName": "Google My Business",
+    "status": "ACTIVE",
+    "createdAt": "2026-05-08T12:07:34.171Z",
+    "externalAccountId": "martechvenpep@gmail.com",
+    "locationId": "default",
+    "locationName": "martechvenpep@gmail.com",
+    "lastSyncAt": "2026-05-08T12:08:16.589Z"
+  },
+  {
+    "id": "d30bbcf5-1584-4655-9262-bd8239794423",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "GOOGLE_MY_BUSINESS",
+    "authMode": "OAUTH",
+    "displayName": "Google My Business",
+    "status": "PENDING_AUTH",
+    "createdAt": "2026-05-11T05:59:04.021Z"
+  },
+  {
+    "id": "629af889-ed9c-4f93-a638-2e3970f8b223",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "GOOGLE_MY_BUSINESS",
+    "authMode": "OAUTH",
+    "displayName": "Google My Business",
+    "status": "PENDING_AUTH",
+    "createdAt": "2026-05-11T06:32:27.872Z"
+  }
+]
