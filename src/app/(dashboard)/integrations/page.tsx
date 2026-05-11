@@ -19,7 +19,8 @@ import { PLATFORM_CONFIG } from "@/lib/portals"
 type Source = {
   id: string; platform: string; displayName: string; authMode: string
   status: string; locationName: string | null; productName: string | null
-  lastSyncedAt: string | null   // mapped from lastSyncAt in DB; lastSyncError: string | null
+  lastSyncedAt: string | null   // mapped from lastSyncAt in DB
+  lastSyncError: string | null
   webhookUrl: string | null; externalAccountId: string | null
 }
 
