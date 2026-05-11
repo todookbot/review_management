@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       }
 
       let source = null
-      let sourceId: string = crypto.randomUUID()
+      let sourceId: any = crypto.randomUUID()
       try {
         // Store pending source in DB
         const result = await db
