@@ -472,9 +472,9 @@ export default function IntegrationsPage() {
                       <p className="text-amber-700">1. Enable "My Business Business Information API"</p>
                       <p className="text-amber-700">2. Authorized Redirect URI:</p>
                       <code className="block bg-white p-1 border rounded select-all text-black">
-                        {process.env.NEXT_PUBLIC_APP_URL}/api/oauth/callback/google
+                        {(typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL)}/api/oauth/callback/google
                       </code>
-                      <p className="text-amber-700 pt-1">3. Update <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in <code>.env.local</code></p>
+                      <p className="text-amber-700 pt-1">3. Update <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in <code>.env.local</code> (or Railway Variables)</p>
                     </div>
                   </div>
                 )}
