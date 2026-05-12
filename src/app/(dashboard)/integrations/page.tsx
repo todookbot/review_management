@@ -110,7 +110,24 @@ export default function IntegrationsPage() {
           // Hard redirect to Google/Facebook/etc consent screen
           toast.info(`Redirecting to ${platMeta?.name}…`)
           setAddOpen(false)
-          window.location.href = data.authUrl   // ← The real redirect
+          
+          let finalUrl = data.authUrl
+          
+          // FOR GOOGLE: Overwrite with client-side built URL for maximum reliability
+          if (selectedPlat === "GOOGLE_MY_BUSINESS") {
+            const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+            const origin   = typeof window !== "undefined" ? window.location.origin : ""
+            const redirectUri = `${origin}/api/google/callback`
+            
+            const params = new URL(data.authUrl).searchParams
+            params.set("client_id", clientId!)
+            params.set("redirect_uri", redirectUri)
+            
+            finalUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+            console.log("Client-side built Google OAuth URL:", finalUrl)
+          }
+
+          window.location.href = finalUrl
           return
         }
 

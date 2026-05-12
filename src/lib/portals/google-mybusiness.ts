@@ -8,7 +8,7 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
   readonly authModes   = ["OAUTH"] as const
 
   readonly oauthConfig: OAuthConfig = {
-    clientId:     process.env.GOOGLE_CLIENT_ID!,
+    clientId:     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     redirectUri:  `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/oauth/callback/google`,
     scopes: [
