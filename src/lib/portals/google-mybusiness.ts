@@ -10,10 +10,12 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
   readonly oauthConfig: OAuthConfig = {
     clientId:     process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    redirectUri:  `${process.env.NEXT_PUBLIC_APP_URL}/api/oauth/callback/google`,
+    redirectUri:  `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/oauth/callback/google`,
     scopes: [
       "https://www.googleapis.com/auth/business.manage",
       "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "openid",
     ],
   }
 
@@ -25,9 +27,12 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
       scope:         this.oauthConfig.scopes.join(" "),
       access_type:   "offline",
       prompt:        "consent",
+      include_granted_scopes: "true",
       state,
     })
-    return `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+    console.log("Generated Google OAuth URL:", url)
+    return url
   }
 
   async exchangeOAuthCode(code: string) {
