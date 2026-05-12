@@ -20,9 +20,14 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
   }
 
   buildOAuthUrl(state: string, origin?: string): string {
-    const appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    const redirectUri = `${appUrl}/api/oauth/callback/google`
+    let appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     
+    // Hard-fix for Railway to ensure HTTPS and exact domain match
+    if (appUrl.includes("railway.app")) {
+      appUrl = "https://adaptable-success-production.up.railway.app"
+    }
+    
+    const redirectUri = `${appUrl}/api/oauth/callback/google`
     console.log(`[GoogleMyBusiness] Building OAuth URL with redirect_uri: ${redirectUri}`)
 
     const params = new URLSearchParams({
@@ -39,7 +44,12 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
   }
 
   async exchangeOAuthCode(code: string, origin?: string) {
-    const appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    let appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    
+    if (appUrl.includes("railway.app")) {
+      appUrl = "https://adaptable-success-production.up.railway.app"
+    }
+    
     const redirectUri = `${appUrl}/api/oauth/callback/google`
 
     const res = await fetch("https://oauth2.googleapis.com/token", {
