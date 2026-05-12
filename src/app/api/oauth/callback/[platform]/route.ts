@@ -16,7 +16,7 @@ export async function GET(
   const state   = searchParams.get("state")
   const error   = searchParams.get("error")
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ""
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin
 
   if (error) {
     return NextResponse.redirect(`${appUrl}/integrations?error=${encodeURIComponent(error)}`)
@@ -45,7 +45,8 @@ export async function GET(
     }
 
     // Exchange code for tokens
-    const tokens = await adapter.exchangeOAuthCode(code)
+    const origin = req.nextUrl.origin
+    const tokens = await adapter.exchangeOAuthCode(code, origin)
 
     // Store in Secrets Manager
     const secretArn = await storePortalSecret(tenantId, sourceId, platform, {

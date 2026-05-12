@@ -135,7 +135,8 @@ export async function POST(req: NextRequest) {
         JSON.stringify({ tenantId: data.tenantId, sourceId }),
       ).toString("base64url")
 
-      const authUrl = adapter.buildOAuthUrl(state)
+      const origin = req.nextUrl.origin
+      const authUrl = adapter.buildOAuthUrl(state, origin)
 
       return NextResponse.json({ source, authUrl, status: "oauth_pending" })
     }

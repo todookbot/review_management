@@ -19,10 +19,15 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
     ],
   }
 
-  buildOAuthUrl(state: string): string {
+  buildOAuthUrl(state: string, origin?: string): string {
+    const appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const redirectUri = `${appUrl}/api/oauth/callback/google`
+    
+    console.log(`[GoogleMyBusiness] Building OAuth URL with redirect_uri: ${redirectUri}`)
+
     const params = new URLSearchParams({
       client_id:     this.oauthConfig.clientId,
-      redirect_uri:  this.oauthConfig.redirectUri,
+      redirect_uri:  redirectUri,
       response_type: "code",
       scope:         this.oauthConfig.scopes.join(" "),
       access_type:   "offline",
@@ -30,12 +35,13 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
       include_granted_scopes: "true",
       state,
     })
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
-    console.log("Generated Google OAuth URL:", url)
-    return url
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
   }
 
-  async exchangeOAuthCode(code: string) {
+  async exchangeOAuthCode(code: string, origin?: string) {
+    const appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    const redirectUri = `${appUrl}/api/oauth/callback/google`
+
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -43,7 +49,7 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
         code,
         client_id:     this.oauthConfig.clientId,
         client_secret: this.oauthConfig.clientSecret,
-        redirect_uri:  this.oauthConfig.redirectUri,
+        redirect_uri:  redirectUri,
         grant_type:    "authorization_code",
       }),
     })

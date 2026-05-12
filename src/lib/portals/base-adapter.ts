@@ -35,10 +35,10 @@ export abstract class BasePortalAdapter {
   abstract validateApiKey(apiKey: string, config?: Record<string, string>): Promise<boolean>
 
   /** Build the OAuth authorization URL */
-  buildOAuthUrl?(state: string): string
+  buildOAuthUrl?(state: string, origin?: string): string
 
   /** Exchange OAuth code for tokens */
-  exchangeOAuthCode?(code: string): Promise<{
+  exchangeOAuthCode?(code: string, origin?: string): Promise<{
     accessToken:  string
     refreshToken: string
     expiresAt:    Date
