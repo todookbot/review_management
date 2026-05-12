@@ -46,7 +46,9 @@ export async function GET(req: NextRequest) {
       type:         "OAUTH",
       accessToken:  tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      expiresAt:    tokens.expiresAt.toISOString(),
+      expiresAt:    (tokens.expiresAt instanceof Date && !isNaN(tokens.expiresAt.getTime())) 
+                    ? tokens.expiresAt.toISOString() 
+                    : new Date(Date.now() + 3600000).toISOString(),
       tokenType:    tokens.tokenType,
       scope:        tokens.scope,
     })

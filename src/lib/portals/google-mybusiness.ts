@@ -74,7 +74,7 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
     return {
       accessToken:       data.access_token,
       refreshToken:      data.refresh_token,
-      expiresAt:         new Date(Date.now() + data.expires_in * 1000),
+      expiresAt:         new Date(Date.now() + (data.expires_in || 3600) * 1000),
       tokenType:         data.token_type,
       scope:             data.scope,
       externalAccountId: user.email,
