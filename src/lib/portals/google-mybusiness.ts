@@ -27,7 +27,7 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
       appUrl = "https://adaptable-success-production.up.railway.app"
     }
     
-    const redirectUri = `${appUrl}/api/oauth/callback/google`
+    const redirectUri = `${appUrl}/api/google/callback`
     console.log(`[GoogleMyBusiness] Building OAuth URL with redirect_uri: ${redirectUri}`)
 
     const params = new URLSearchParams({
