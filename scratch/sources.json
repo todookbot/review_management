@@ -74,5 +74,17 @@
     "displayName": "Google My Business",
     "status": "PENDING_AUTH",
     "createdAt": "2026-05-12T09:59:10.823Z"
+  },
+  {
+    "id": "f6536c0c-82e6-4dbe-911d-8c671aa97ee9",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "GOOGLE_MY_BUSINESS",
+    "authMode": "OAUTH",
+    "displayName": "Google My Business",
+    "status": "ACTIVE",
+    "createdAt": "2026-05-12T10:04:20.701Z",
+    "locationId": "default",
+    "locationName": "My Business",
+    "lastSyncAt": "2026-05-12T10:04:55.740Z"
   }
 ]
