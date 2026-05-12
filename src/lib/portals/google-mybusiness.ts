@@ -19,16 +19,19 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
     ],
   }
 
-  buildOAuthUrl(state: string, origin?: string): string {
+  buildOAuthUrl(stateInput: string, origin?: string): string {
     let appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    
-    // Hard-fix for Railway to ensure HTTPS and exact domain match
     if (appUrl.includes("railway.app")) {
       appUrl = "https://adaptable-success-production.up.railway.app"
     }
-    
     const redirectUri = `${appUrl}/api/google/callback`
     console.log(`[GoogleMyBusiness] Building OAuth URL with redirect_uri: ${redirectUri}`)
+
+    // Embed redirectUri in state so the callback can use the exact same URI
+    let stateObj: Record<string, any> = {}
+    try { stateObj = JSON.parse(Buffer.from(stateInput, "base64url").toString()) } catch {}
+    stateObj.redirectUri = redirectUri
+    const state = Buffer.from(JSON.stringify(stateObj)).toString("base64url")
 
     const params = new URLSearchParams({
       client_id:     this.oauthConfig.clientId,
@@ -44,13 +47,13 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
   }
 
   async exchangeOAuthCode(code: string, origin?: string) {
+    // origin should be the EXACT redirectUri used in the initial OAuth URL
     let appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    
     if (appUrl.includes("railway.app")) {
       appUrl = "https://adaptable-success-production.up.railway.app"
     }
-    
-    const redirectUri = `${appUrl}/api/oauth/callback/google`
+    const redirectUri = `${appUrl}/api/google/callback`
+    console.log(`[GoogleMyBusiness] Exchanging code with redirect_uri: ${redirectUri}`)
 
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -64,6 +67,14 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
       }),
     })
     const data = await res.json()
+    if (data.error) {
+      console.error(`[GoogleMyBusiness] Token exchange failed: ${data.error} - ${data.error_description}`)
+      throw new Error(`Google token exchange failed: ${data.error_description ?? data.error}`)
+    }
+    if (!data.access_token) {
+      console.error("[GoogleMyBusiness] No access_token in response:", JSON.stringify(data))
+      throw new Error("Google returned no access_token")
+    }
 
     // Get account email
     const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {

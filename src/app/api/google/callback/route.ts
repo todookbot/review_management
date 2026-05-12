@@ -28,9 +28,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { tenantId, sourceId } = JSON.parse(
+    const { tenantId, sourceId, redirectUri: savedRedirectUri } = JSON.parse(
       Buffer.from(state, "base64url").toString("utf-8"),
-    ) as { tenantId: string; sourceId: string }
+    ) as { tenantId: string; sourceId: string; redirectUri?: string }
 
     const platform = "GOOGLE_MY_BUSINESS"
     const adapter  = getAdapter(platform)
@@ -39,11 +39,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(`${appUrl}/integrations?error=oauth_not_supported`)
     }
 
-    // Exchange code for tokens
-    const origin = appUrl.includes("railway.app")
-      ? "https://adaptable-success-production.up.railway.app"
-      : req.nextUrl.origin
-    const tokens = await adapter.exchangeOAuthCode(code, origin)
+    // Use the EXACT redirectUri from state (same one used in OAuth URL)
+    // Fall back to current origin if not available
+    const exchangeOrigin = savedRedirectUri
+      ? savedRedirectUri.replace("/api/google/callback", "")
+      : (appUrl.includes("railway.app") ? "https://adaptable-success-production.up.railway.app" : req.nextUrl.origin)
+    
+    console.log(`[Google Callback] Using exchange origin: ${exchangeOrigin}`)
+    const tokens = await adapter.exchangeOAuthCode(code, exchangeOrigin)
 
     const safeExpiresAt = (tokens.expiresAt instanceof Date && !isNaN(tokens.expiresAt.getTime()))
       ? tokens.expiresAt
