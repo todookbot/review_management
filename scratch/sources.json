@@ -86,5 +86,17 @@
     "locationId": "default",
     "locationName": "My Business",
     "lastSyncAt": "2026-05-12T10:04:55.740Z"
+  },
+  {
+    "id": "d546bd60-79f0-4b4a-bf20-7d7a206d1e5c",
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "platform": "GOOGLE_MY_BUSINESS",
+    "authMode": "OAUTH",
+    "displayName": "Google My Business",
+    "status": "ACTIVE",
+    "createdAt": "2026-05-12T10:07:59.318Z",
+    "locationId": "default",
+    "locationName": "My Business",
+    "lastSyncAt": "2026-05-12T10:08:13.357Z"
   }
 ]

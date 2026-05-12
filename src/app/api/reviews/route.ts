@@ -21,12 +21,70 @@ const querySchema = z.object({
   limit:       z.coerce.number().default(20),
 })
 
+// Helper: fetch real Google My Business reviews using locally stored token
+async function fetchRealGoogleReviews(): Promise<any[] | null> {
+  try {
+    const { getLatestGoogleToken } = require("@/lib/local-storage")
+    const tokenData = getLatestGoogleToken()
+    if (!tokenData) return null
+
+    const accessToken = tokenData.token.accessToken
+
+    // Get accounts
+    const accountsRes = await fetch(
+      "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    if (!accountsRes.ok) return null
+    const accountsData = await accountsRes.json()
+    const account = accountsData.accounts?.[0]
+    if (!account) return null
+
+    // Get locations
+    const locRes = await fetch(
+      `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    const locData = await locRes.json()
+    const location = locData.locations?.[0]
+    if (!location) return null
+
+    // Fetch reviews
+    const reviewsRes = await fetch(
+      `https://mybusiness.googleapis.com/v4/${location.name}/reviews?pageSize=50`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    if (!reviewsRes.ok) return null
+    const reviewsData = await reviewsRes.json()
+    if (!reviewsData.reviews?.length) return []
+
+    const starMap: Record<string, number> = { ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 }
+
+    return reviewsData.reviews.map((r: any) => ({
+      id:           r.reviewId,
+      platform:     "GOOGLE_MY_BUSINESS",
+      rating:       starMap[r.starRating] ?? 3,
+      status:       "NEW",
+      isUrgent:     (starMap[r.starRating] ?? 3) <= 2,
+      authorName:   r.reviewer?.displayName ?? "Anonymous",
+      reviewedAt:   r.createTime,
+      locationName: location.title ?? account.name,
+      body:         r.comment ?? "(No comment left)",
+      replyText:    r.reviewReply?.comment ?? null,
+      tags:         [],
+      hasDraft:     false,
+    }))
+  } catch (err) {
+    console.warn("[reviews] Real Google fetch error:", err)
+    return null
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const params = Object.fromEntries(req.nextUrl.searchParams)
     const query  = querySchema.parse(params)
 
-    // Fallback: use the first tenant (for local dev without session)
     let tenantId = query.tenantId
     if (!tenantId) {
       const [first] = await db.select({ id: tenants.id }).from(tenants).limit(1)
@@ -56,7 +114,6 @@ export async function GET(req: NextRequest) {
       .limit(query.limit)
       .offset(offset)
 
-    // Attach tags + draft existence for each review
     const reviewIds = rows.map(r => r.id)
     const [tags, drafts] = reviewIds.length
       ? await Promise.all([
@@ -80,9 +137,15 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ reviews: enriched, page: query.page, limit: query.limit })
   } catch (err) {
-    console.error("DB Fetch Error in /api/reviews:", err)
-    
-    // Fallback: return rich Google My Business mock data when DB is unavailable
+    console.error("DB unavailable in /api/reviews, trying real Google reviews:", err)
+
+    // Try fetching real Google My Business reviews
+    const googleReviews = await fetchRealGoogleReviews()
+    if (googleReviews !== null && googleReviews.length > 0) {
+      return NextResponse.json({ reviews: googleReviews, page: 1, limit: 50, source: "google_live" })
+    }
+
+    // Final fallback: mock data
     return NextResponse.json({
       reviews: [
         {
@@ -93,8 +156,8 @@ export async function GET(req: NextRequest) {
           isUrgent: false,
           authorName: "Priya Sharma",
           reviewedAt: new Date(Date.now() - 1800000).toISOString(),
-          locationName: "martechvenpep@gmail.com",
-          body: "Absolutely fantastic service! The team was incredibly responsive and went above and beyond to help me. I'll definitely be recommending this to all my friends.",
+          locationName: "My Business",
+          body: "Absolutely fantastic service! The team was incredibly responsive and went above and beyond to help me.",
           tags: [
             { tagType: "SENTIMENT", value: "POSITIVE" },
             { tagType: "TOPIC",     value: "staff_behavior" },
@@ -111,12 +174,11 @@ export async function GET(req: NextRequest) {
           isUrgent: true,
           authorName: "Rajesh Kumar",
           reviewedAt: new Date(Date.now() - 3600000).toISOString(),
-          locationName: "martechvenpep@gmail.com",
-          body: "Terrible experience. I waited over 30 minutes and nobody acknowledged me. The place was dirty and the staff were on their phones. I want a refund immediately!",
+          locationName: "My Business",
+          body: "Terrible experience. I waited over 30 minutes and nobody acknowledged me.",
           tags: [
             { tagType: "SENTIMENT", value: "NEGATIVE" },
             { tagType: "TOPIC",     value: "service_speed" },
-            { tagType: "TOPIC",     value: "cleanliness" },
             { tagType: "URGENCY",   value: "CRITICAL" },
             { tagType: "INTENT",    value: "COMPLAINT" },
           ],
@@ -130,8 +192,8 @@ export async function GET(req: NextRequest) {
           isUrgent: false,
           authorName: "Ananya Patel",
           reviewedAt: new Date(Date.now() - 7200000).toISOString(),
-          locationName: "martechvenpep@gmail.com",
-          body: "Great overall experience. The product quality is top-notch and delivery was faster than expected. Minor issue with packaging but nothing serious.",
+          locationName: "My Business",
+          body: "Great overall experience. The product quality is top-notch and delivery was faster than expected.",
           tags: [
             { tagType: "SENTIMENT", value: "POSITIVE" },
             { tagType: "TOPIC",     value: "food_quality" },
@@ -140,64 +202,10 @@ export async function GET(req: NextRequest) {
           ],
           hasDraft: true,
         },
-        {
-          id: "gmb-mock-4",
-          platform: "GOOGLE_MY_BUSINESS",
-          rating: 3,
-          status: "IN_PROGRESS",
-          isUrgent: false,
-          authorName: "Vikram Singh",
-          reviewedAt: new Date(Date.now() - 86400000).toISOString(),
-          locationName: "martechvenpep@gmail.com",
-          body: "Mixed feelings. The ambiance is lovely and location is convenient, but the pricing seems a bit steep for what you get. Would return for special occasions only.",
-          tags: [
-            { tagType: "SENTIMENT", value: "MIXED" },
-            { tagType: "TOPIC",     value: "price_value" },
-            { tagType: "TOPIC",     value: "ambiance" },
-            { tagType: "URGENCY",   value: "MEDIUM" },
-            { tagType: "INTENT",    value: "SUGGESTION" },
-          ],
-          hasDraft: false,
-        },
-        {
-          id: "gmb-mock-5",
-          platform: "GOOGLE_MY_BUSINESS",
-          rating: 5,
-          status: "RESPONDED",
-          isUrgent: false,
-          authorName: "Meera Nair",
-          reviewedAt: new Date(Date.now() - 172800000).toISOString(),
-          locationName: "martechvenpep@gmail.com",
-          body: "Best in the area, hands down. I've tried many similar places and this one stands out for its consistency, quality, and the warmth of the staff. Keep it up!",
-          tags: [
-            { tagType: "SENTIMENT", value: "POSITIVE" },
-            { tagType: "TOPIC",     value: "staff_behavior" },
-            { tagType: "URGENCY",   value: "LOW" },
-            { tagType: "INTENT",    value: "PRAISE" },
-          ],
-          hasDraft: false,
-        },
-        {
-          id: "gmb-mock-6",
-          platform: "GOOGLE_MY_BUSINESS",
-          rating: 2,
-          status: "NEW",
-          isUrgent: true,
-          authorName: "Arun Menon",
-          reviewedAt: new Date(Date.now() - 259200000).toISOString(),
-          locationName: "martechvenpep@gmail.com",
-          body: "Disappointed with the recent decline in quality. Used to be excellent but the last two visits were subpar. The manager needs to address the staff training urgently.",
-          tags: [
-            { tagType: "SENTIMENT", value: "NEGATIVE" },
-            { tagType: "TOPIC",     value: "staff_behavior" },
-            { tagType: "URGENCY",   value: "HIGH" },
-            { tagType: "INTENT",    value: "COMPLAINT" },
-          ],
-          hasDraft: false,
-        },
       ],
       page: 1,
       limit: 20,
+      source: "mock",
     })
   }
 }
