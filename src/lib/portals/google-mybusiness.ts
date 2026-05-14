@@ -21,7 +21,7 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
 
   buildOAuthUrl(stateInput: string, origin?: string): string {
     let appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    if (appUrl.includes("railway.app")) {
+    if (appUrl.includes("railway.app") || appUrl.includes("adaptable-success")) {
       appUrl = "https://adaptable-success-production.up.railway.app"
     }
     const redirectUri = `${appUrl}/api/google/callback`
@@ -49,7 +49,7 @@ export class GoogleMyBusinessAdapter extends BasePortalAdapter {
   async exchangeOAuthCode(code: string, origin?: string) {
     // origin should be the EXACT redirectUri used in the initial OAuth URL
     let appUrl = origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    if (appUrl.includes("railway.app")) {
+    if (appUrl.includes("railway.app") || appUrl.includes("adaptable-success")) {
       appUrl = "https://adaptable-success-production.up.railway.app"
     }
     const redirectUri = `${appUrl}/api/google/callback`

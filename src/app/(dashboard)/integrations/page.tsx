@@ -116,7 +116,10 @@ export default function IntegrationsPage() {
           // FOR GOOGLE: Overwrite with client-side built URL for maximum reliability
           if (selectedPlat === "GOOGLE_MY_BUSINESS") {
             const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-            const origin   = typeof window !== "undefined" ? window.location.origin : ""
+            let origin = typeof window !== "undefined" ? window.location.origin : ""
+            if (origin.includes("railway.app") || origin.includes("adaptable-success")) {
+              origin = "https://adaptable-success-production.up.railway.app"
+            }
             const redirectUri = `${origin}/api/google/callback`
             
             const params = new URL(data.authUrl).searchParams
