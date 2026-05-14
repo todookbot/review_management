@@ -21,11 +21,33 @@ const querySchema = z.object({
   limit:       z.coerce.number().default(20),
 })
 
-// Helper: fetch real Google My Business reviews using locally stored token
+// Helper: fetch real Google My Business reviews using stored token
 async function fetchRealGoogleReviews(): Promise<any[] | null> {
   try {
-    const { getLatestGoogleToken } = require("@/lib/local-storage")
-    const tokenData = getLatestGoogleToken()
+    let tokenData = null;
+
+    try {
+      const clientPromise = require("@/lib/mongodb").default;
+      const client = await clientPromise;
+      const dbMongo = client.db();
+      const tokensCollection = dbMongo.collection("tokens");
+      
+      const mongoToken = await tokensCollection.find({ platform: "GOOGLE_MY_BUSINESS" })
+        .sort({ savedAt: -1 })
+        .limit(1)
+        .toArray();
+      
+      if (mongoToken && mongoToken.length > 0) {
+        tokenData = { sourceId: mongoToken[0].sourceId, token: mongoToken[0] };
+      }
+    } catch (mongoErr) {
+      console.warn("[reviews] Failed to fetch token from MongoDB:", mongoErr);
+    }
+
+    if (!tokenData) {
+      const { getLatestGoogleToken } = require("@/lib/local-storage")
+      tokenData = getLatestGoogleToken()
+    }
     if (!tokenData) return null
 
     const accessToken = tokenData.token.accessToken

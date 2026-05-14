@@ -1,11 +1,33 @@
 import { NextRequest, NextResponse } from "next/server"
+import clientPromise from "@/lib/mongodb"
 import { getLatestGoogleToken } from "@/lib/local-storage"
 
 // GET /api/google/reviews?accountId=...&locationId=...
-// Fetches REAL reviews from Google My Business API using locally stored token
+// Fetches REAL reviews from Google My Business API using stored token
 export async function GET(req: NextRequest) {
   try {
-    const tokenData = getLatestGoogleToken()
+    let tokenData = null;
+
+    try {
+      const client = await clientPromise;
+      const dbMongo = client.db();
+      const tokensCollection = dbMongo.collection("tokens");
+      
+      const mongoToken = await tokensCollection.find({ platform: "GOOGLE_MY_BUSINESS" })
+        .sort({ savedAt: -1 })
+        .limit(1)
+        .toArray();
+      
+      if (mongoToken && mongoToken.length > 0) {
+        tokenData = { sourceId: mongoToken[0].sourceId, token: mongoToken[0] };
+      }
+    } catch (mongoErr) {
+      console.error("[Google Reviews] Failed to fetch token from MongoDB:", mongoErr);
+    }
+
+    if (!tokenData) {
+      tokenData = getLatestGoogleToken()
+    }
 
     if (!tokenData) {
       return NextResponse.json(

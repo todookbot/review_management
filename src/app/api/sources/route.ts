@@ -34,11 +34,31 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ sources })
   } catch (err) {
-    console.warn("DB fetch failed, returning local storage fallback:", err)
-    const { getLocalSources } = require("@/lib/local-storage")
-    const localSources = getLocalSources()
+    console.warn("Postgres DB fetch failed, trying MongoDB fallback")
     
-    // Map local storage fields to match the DB query shape the frontend expects
+    let localSources: any[] = []
+    
+    try {
+      const clientPromise = require("@/lib/mongodb").default
+      const client = await clientPromise
+      const dbMongo = client.db()
+      const sourcesCollection = dbMongo.collection("sources")
+      
+      const mongoSources = await sourcesCollection.find({}).toArray()
+      
+      if (mongoSources && mongoSources.length > 0) {
+        localSources = mongoSources
+      }
+    } catch (mongoErr) {
+      console.warn("MongoDB fetch failed, using local storage fallback", mongoErr)
+    }
+
+    if (localSources.length === 0) {
+      const { getLocalSources } = require("@/lib/local-storage")
+      localSources = getLocalSources()
+    }
+    
+    // Map local storage/MongoDB fields to match the DB query shape the frontend expects
     const mapped = localSources.map((s: any) => ({
       id:                s.id,
       platform:          s.platform ?? "GOOGLE_MY_BUSINESS",
@@ -56,3 +76,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sources: mapped })
   }
 }
+

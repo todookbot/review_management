@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm"
 import { getAdapter } from "@/lib/portals"
 import { storePortalSecret } from "@/lib/aws/secrets-manager"
 import { saveLocalSource, saveLocalToken } from "@/lib/local-storage"
+import clientPromise from "@/lib/mongodb"
 
 // GET /api/google/callback?code=...&state=...
 export async function GET(req: NextRequest) {
@@ -52,16 +53,41 @@ export async function GET(req: NextRequest) {
       ? tokens.expiresAt
       : new Date(Date.now() + 3600000)
 
-    // Always save token locally so reviews can be fetched without AWS
-    saveLocalToken(sourceId, {
-      accessToken:  tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt:    safeExpiresAt.toISOString(),
-      tokenType:    tokens.tokenType,
-      scope:        tokens.scope,
-      platform:     "GOOGLE_MY_BUSINESS",
-      email:        tokens.externalAccountId,
-    })
+    // Save token to MongoDB
+    try {
+      const client = await clientPromise;
+      const dbMongo = client.db();
+      const tokensCollection = dbMongo.collection("tokens");
+      await tokensCollection.updateOne(
+        { sourceId },
+        {
+          $set: {
+            accessToken:  tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiresAt:    safeExpiresAt.toISOString(),
+            tokenType:    tokens.tokenType,
+            scope:        tokens.scope,
+            platform:     "GOOGLE_MY_BUSINESS",
+            email:        tokens.externalAccountId,
+            savedAt:      new Date().toISOString()
+          }
+        },
+        { upsert: true }
+      );
+      console.log("[Google Callback] Token saved to MongoDB successfully");
+    } catch (mongoErr) {
+      console.error("[Google Callback] Failed to save token to MongoDB:", mongoErr);
+      // Fallback to local storage if MongoDB fails
+      saveLocalToken(sourceId, {
+        accessToken:  tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt:    safeExpiresAt.toISOString(),
+        tokenType:    tokens.tokenType,
+        scope:        tokens.scope,
+        platform:     "GOOGLE_MY_BUSINESS",
+        email:        tokens.externalAccountId,
+      })
+    }
 
     // Try to store in Secrets Manager (may fail if AWS not configured)
     let secretArn = "local"
@@ -121,8 +147,9 @@ export async function GET(req: NextRequest) {
         })
         .where(eq(reviewSources.id, sourceId))
     } catch (dbErr) {
-      console.warn("[Google Callback] DB unavailable, saving to local storage")
-      saveLocalSource({
+      console.warn("[Google Callback] Postgres DB unavailable, saving source to MongoDB")
+      
+      const newSource = {
         id:                sourceId,
         tenantId,
         platform,
@@ -133,7 +160,21 @@ export async function GET(req: NextRequest) {
         locationId,
         locationName,
         lastSyncAt:        new Date().toISOString(),
-      })
+      };
+
+      try {
+        const client = await clientPromise;
+        const dbMongo = client.db();
+        const sourcesCollection = dbMongo.collection("sources");
+        await sourcesCollection.updateOne(
+          { id: sourceId },
+          { $set: newSource },
+          { upsert: true }
+        );
+      } catch (mongoErr) {
+        console.error("[Google Callback] Failed to save source to MongoDB, using local storage fallback", mongoErr)
+        saveLocalSource(newSource)
+      }
     }
 
     return NextResponse.redirect(`${appUrl}/integrations?connected=GOOGLE&sourceId=${sourceId}`)
