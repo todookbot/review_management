@@ -14,10 +14,7 @@ export async function GET(req: NextRequest) {
   const state   = searchParams.get("state")
   const error   = searchParams.get("error")
 
-  // Always use Railway URL in production, otherwise use current origin
-  const appUrl = req.nextUrl.origin.includes("railway.app")
-    ? "https://adaptable-success-production.up.railway.app"
-    : (process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin)
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin).replace(/\/$/, "")
 
   if (error) {
     return NextResponse.redirect(`${appUrl}/integrations?error=${encodeURIComponent(error)}`)
@@ -44,7 +41,7 @@ export async function GET(req: NextRequest) {
     // Fall back to current origin if not available
     const exchangeOrigin = savedRedirectUri
       ? savedRedirectUri.replace("/api/google/callback", "")
-      : (appUrl.includes("railway.app") ? "https://adaptable-success-production.up.railway.app" : req.nextUrl.origin)
+      : appUrl
     
     console.log(`[Google Callback] Using exchange origin: ${exchangeOrigin}`)
     const tokens = await adapter.exchangeOAuthCode(code, exchangeOrigin)

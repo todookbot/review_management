@@ -117,10 +117,7 @@ export default function IntegrationsPage() {
           if (selectedPlat === "GOOGLE_MY_BUSINESS") {
             const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
             let origin = typeof window !== "undefined" ? window.location.origin : ""
-            if (origin.includes("railway.app") || origin.includes("adaptable-success")) {
-              origin = "https://adaptable-success-production.up.railway.app"
-            }
-            const redirectUri = `${origin}/api/google/callback`
+            const redirectUri = `${origin.replace(/\/$/, "")}/api/google/callback`
             
             const params = new URL(data.authUrl).searchParams
             params.set("client_id", clientId!)
@@ -492,9 +489,9 @@ export default function IntegrationsPage() {
                       <p className="text-amber-700">1. Enable "My Business Business Information API"</p>
                       <p className="text-amber-700">2. Authorized Redirect URI:</p>
                       <code className="block bg-white p-1 border rounded select-all text-black">
-                        {(typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL)}/api/google/callback
+                        {(typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "")).replace(/\/$/, "")}/api/google/callback
                       </code>
-                      <p className="text-amber-700 pt-1">3. Update <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in <code>.env.local</code> (or Railway Variables)</p>
+                      <p className="text-amber-700 pt-1">3. Update <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> in Railway Variables</p>
                     </div>
                   </div>
                 )}
